@@ -1,0 +1,6 @@
+---
+layout: categories
+title: Tags
+permalink: /tags/
+---
+
