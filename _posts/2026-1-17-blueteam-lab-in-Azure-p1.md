@@ -42,11 +42,8 @@ We'll do some prep work in Azure to get started. If you're doing this in a self-
 6. Change Public inbound ports to None. We'll set this up later using a Network Security Group (NSG).
 7. Go to the Networking tab. Create a Virtual Network `vnet-blueteamlab (10.0.0.0/16)` and a Subnet `(10.0.0.0/24)`. Our VMs will live on this subnet.
 8. (Optional) Create a public IP for the VM. This will allow us to directly access our created VMs over the internet. I did this for Splunk because I wanted to access the web interface easily from my computer. We'll lock this down with a NSG in the next step. Public IPs have a nominal cost, like $0.005/hour for a Standard Static IPv4 address.
-
 You'll need an entry point into the lab itself. Giving one of the VMs a public IP will let you use it as a jump box; letting you SSH/RDP into it and then pivoting from there to the machine you need on the internal network. 
-
 For example, to get to the attack simulation machine (PENTEST), I can go `My Computer -> SSH into SPLUNK -> SSH into PENTEST`.
-
 There are also other ways to do this. You can configure an Azure Bastion Host to do this without a public IP at all. Another way would be to configure a site-to-site VPN connection, but that's more complex and costly for what we're doing here.
 
 9. Under Configure network security group, select Advanced. Create a new Network Security Group. We'll want to lock down outside access so that various internet scoundrels won't try to bruteforce us.
@@ -80,7 +77,7 @@ For the Splunk server, we'll need to do the following:
 - Download and install Splunk Enterprise
 - Configure recieving on port 9997
 - Create some indexes
-- Install Splunk Add-on for Microsoft Windows in Splunk web
+- Install Splunk Add-on for Microsoft Windows
 
 ## Installation
 
@@ -88,7 +85,7 @@ We're ready to stand up Splunk on the VM we just created. Before we begin, make 
 
 Next, download Splunk Enterprise. Go [here](https://www.splunk.com/en_us/download/splunk-enterprise.html) and create an account. You should be able to download it straight onto your Ubuntu server using the wget URL they provide. The one below will not work for you.
 
-`splunker@Splunk:~$ wget -O splunk-10.0.2-e2d18b4767e9-linux-amd64.deb "https://download.splunk.com/products/splunk/releases/10.0.2/linux/splunk-10.0.2-linux-amd64.deb"`
+`splunker@Splunk:~$ wget -O splunk-10.0.2-linux-amd64.deb "https://download.splunk.com/products/splunk/releases/10.0.2/linux/splunk-10.0.2-linux-amd64.deb"`
 
 Install the Splunk package you just downloaded:
 
