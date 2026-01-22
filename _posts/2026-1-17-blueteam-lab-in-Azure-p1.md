@@ -114,7 +114,7 @@ Log in with the admin credentials you created during the installation. Once you 
 
 To do this, go to Settings → Forwarding and Receiving → Configure Receiving → Add New Port: 9997. 
 
-![](img/blueteamlab/partone/Pasted image 20260119220327.png)
+![](/img/blueteamlab/partone/Pasted image 20260119220327.png)
 
 You can verify that the receiver is running with `ss -ano | grep 9997` in your SSH session.
 
@@ -130,17 +130,17 @@ To do this, go to Settings → Indexes → New Index.
 
 The New Index screen is intimidating, but all you need to do right now is fill in the Index Name field.
 
-![](img/blueteamlab/partone/Pasted image 20260119221213.png)
+![](/img/blueteamlab/partone/Pasted image 20260119221213.png)
 
 Your new indexes will get added onto the system defaults at the bottom. You can also see event counts here later.
 
-![](img/blueteamlab/partone/Pasted image 20260119221505.png)
+![](/img/blueteamlab/partone/Pasted image 20260119221505.png)
 
 Next, install Splunk Add-On for Microsoft Windows. You can do this from the main Splunk Enterprise page -> Apps -> Find More Apps. 
 
 This isn't an app exactly, but it improves the way that Splunk handles Windows events. It will automatically extract important fields and also normalizes events to map them to Splunk's CIM (Common Information Model). This makes it easier to correlate events from different sources later.
 
-![](img/blueteamlab/partone/Pasted image 20260119222905.png)
+![](/img/blueteamlab/partone/Pasted image 20260119222905.png)
 
 That's the barebones config done. Now to get the AD domain up so we can start forwarding some logs.
 
@@ -154,8 +154,37 @@ For the DC, we'll need to do the following:
 - Install and configure Spunk Universal Forwarder
 - Create some test users and groups
 
-I'm starting from the assumption that you have an RDP connection to the server as an admin user. To start an AD domain and turn this server into a Domain Controller, install Active Directory Domain Services from either the Server Manager GUI or PowerShell.
+## Domain Creation
 
+I'm starting from the assumption that you have an RDP connection to the server as an admin user. To start an AD domain and turn this server into a Domain Controller, install Active Directory Domain Services and promote it. Make sure it has a static IP set. In the Server Manager GUI, Install the AD DS Role, and then click the yellow notification flag in Server Manager and promote it to a domain controller. Or do it through PowerShell:
+
+```
+Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
+Install-ADDSForest -DomainName soclab.local
+```
+
+I called this domain `btlab.local`.
+
+## Advanced Auditing
+
+The default Windows auditing policy is limited to 9 categories:
+
+
+Advanced Auditing explands on this and is going to vastly improve the usefulness of logs that we can feed into Splunk. It lets us pick specific subcategories of events to log. For example, under the default policy, logon events would all get lumped under "Logon Events", but Advanced Auditing allows us to seperate them out into interactive logons, kerberos auth, etc. 
+
+Dialing in the Advanced Auditing settings correctly is going to improve the signal to noise ratio of the events we injest.
+
+We're going to set this up through Group Policy and apply it to the DC and any other workstations we add to `btlab.local`. I set up an OU for Workstations and made another version of the policy to apply to them, as we may want to prioritize different events for each.
+
+To create the policy, open Group Policy Management Editor, create the policy, link it to either the Domain Controllers or Workstations OU, and Edit it. The Audit Policy settings are under Computer Configuration -> Windows Settings -> Security Settings -> Advanced Audit Policy Configuration -> Audit Policies.
+
+![](/img/blueteamlab/partone/Pasted image 20260112224732.png)
+
+For what we're actually going to enable, I used the baseline recommendations from Microsoft outlined [here](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/audit-policy-recommendations?tabs=winserver), plus `Audit Kerberos Authentication Service` and `Audit Kerberos Service Ticket Operations` under Account Logon. This page hsa tabs for Windows Client and Windows Server, which I used to configure the policies for the Workstations OU and Domain Controllers OU.
+
+Further documentation about these subcategories can be found [here.](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/dn452415(v=ws.11))
+
+## Sysmon
 
 # User Workstation - WKST-01
 
