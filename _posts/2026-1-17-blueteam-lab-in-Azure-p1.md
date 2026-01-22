@@ -83,7 +83,7 @@ For the Splunk server, we'll need to do the following:
 
 We're ready to stand up Splunk on the VM we just created. Before we begin, make sure the system time is correct using `timedatectl`.
 
-Next, download Splunk Enterprise. Go [here](https://www.splunk.com/en_us/download/splunk-enterprise.html) and create an account. You should be able to download it straight onto your Ubuntu server using the wget URL they provide. The one below will not work for you.
+Next, download Splunk Enterprise. Go [here](https://www.splunk.com/en_us/download/splunk-enterprise.html) and create an account. You should be able to download it straight onto your Ubuntu server using the wget URL they provide.
 
 `splunker@Splunk:~$ wget -O splunk-10.0.2-linux-amd64.deb "https://download.splunk.com/products/splunk/releases/10.0.2/linux/splunk-10.0.2-linux-amd64.deb"`
 
@@ -180,11 +180,20 @@ To create the policy, open Group Policy Management Editor, create the policy, li
 
 ![](/img/blueteamlab/partone/Pasted image 20260112224732.png)
 
-For what we're actually going to enable, I used the baseline recommendations from Microsoft outlined [here](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/audit-policy-recommendations?tabs=winserver), plus `Audit Kerberos Authentication Service` and `Audit Kerberos Service Ticket Operations` under Account Logon. This page hsa tabs for Windows Client and Windows Server, which I used to configure the policies for the Workstations OU and Domain Controllers OU.
+For what we're actually going to enable, I used the baseline recommendations from Microsoft outlined [here](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/audit-policy-recommendations?tabs=winserver), plus `Audit Kerberos Authentication Service` and `Audit Kerberos Service Ticket Operations` under Account Logon. This page has tabs for Windows Client and Windows Server, which I used to configure the policies for the Workstations OU and Domain Controllers OU.
 
 Further documentation about these subcategories can be found [here.](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/dn452415(v=ws.11))
 
 ## Sysmon
+
+The other way we will improve our logs is through Sysmon. Sysmon works alongside the default windows event logs and generates more detailed events regarding process creation, network connections, and file changes. It can also be configured to include/exclude different event types, which we can tweak to fit our needs.
+
+I'm going to be using the community config maintained by SwiftOnSecurity, found [here.](https://github.com/SwiftOnSecurity/sysmon-config) There are other community configs like [this one](https://github.com/olafhartong/sysmon-modular) by Olaf Hartong.
+
+I will make one change to this in order to exclude the Splunk Universal Forwarder Directory, which we will install in the next step.
+
+I'm also going to set up a group policy to automatically install and configure this on our future workstations.
+
 
 # User Workstation - WKST-01
 
