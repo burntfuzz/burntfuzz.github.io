@@ -169,6 +169,7 @@ I called this domain `btlab.local`.
 
 The default Windows auditing policy is limited to 9 categories:
 
+![](/img/blueteamlab/partone/Pasted image 20260125153714.png)
 
 Advanced Auditing explands on this and is going to vastly improve the usefulness of logs that we can feed into Splunk. It lets us pick specific subcategories of events to log. For example, under the default policy, logon events would all get lumped under "Logon Events", but Advanced Auditing allows us to seperate them out into interactive logons, kerberos auth, etc. 
 
@@ -183,6 +184,10 @@ To create the policy, open Group Policy Management Editor, create the policy, li
 For what we're actually going to enable, I used the baseline recommendations from Microsoft outlined [here](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/audit-policy-recommendations?tabs=winserver), plus `Audit Kerberos Authentication Service` and `Audit Kerberos Service Ticket Operations` under Account Logon. This page has tabs for Windows Client and Windows Server, which I used to configure the policies for the Workstations OU and Domain Controllers OU.
 
 Further documentation about these subcategories can be found [here.](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/dn452415(v=ws.11))
+
+Once you're done, verify the policies are applied:
+
+`auditpol /get /category:*`
 
 ## Sysmon
 
