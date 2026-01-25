@@ -195,9 +195,47 @@ The other way we will improve our logs is through Sysmon. Sysmon works alongside
 
 I'm going to be using the community config maintained by SwiftOnSecurity, found [here.](https://github.com/SwiftOnSecurity/sysmon-config) There are other community configs like [this one](https://github.com/olafhartong/sysmon-modular) by Olaf Hartong.
 
-I will make one change to this in order to exclude the Splunk Universal Forwarder Directory, which we will install in the next step.
+I will make one change to this in order to exclude the Splunk Universal Forwarder Directory, which we will install in the next step. Add these lines in the XML config file under `!--SYSMON EVENT ID 1 : PROCESS CREATION [ProcessCreate]-->` -> `<ProcessCreate onmatch="exclude">` .
 
-I'm also going to set up a group policy to automatically install and configure this on our future workstations.
+```
+<Image condition="begin with">C:\Program Files\Splunk\bin\</Image>
+<Image condition="begin with">C:\Program Files\Splunk\bin\</Image>
+<!--SECTION: Splunk-->          
+<ParentImage condition="is">C:\Program Files\Splunk\bin\splunkd.exe</ParentImage>
+<ParentImage condition="is">C:\Program Files\Splunk\bin\splunk.exe</ParentImage>
+<Image condition="begin with">C:\Program Files\SplunkUniversalForwarder\bin\</Image>
+<Image condition="begin with">C:\Program Files\SplunkUniversalForwarder\bin\</Image>
+<ParentImage condition="is">C:\Program Files\SplunkUniversalForwarder\bin\splunkd.exe</ParentImage>
+<ParentImage condition="is">C:\Program Files\SplunkUniversalForwarder\bin\splunk.exe</ParentImage>
+```
+
+I'm also going to set up a group policy to automatically install and configure this on our future workstations. I did this by creating a network share called `Software$` on the C:\ drive of DC01, and placing sysmon.exe, the modified sysmon config, and a PowerShell script named `Install-Sysmon.ps1` in a subfolder called `Sysmon`. 
+
+![](/img/blueteamlab/partone/Pasted image 20260125173321.png)
+
+The group policy will call the script from this share and install sysmon using the config file and executable in the share.
+
+```
+## Install-Sysmon.ps1
+$SysmonExe = "\\DC01\Software$\Sysmon\Sysmon.exe"
+$SysmonConfig = "\\DC01\Software$\Sysmon\sysmonconfig-export.xml"
+
+# Check if Sysmon service exists
+$service = Get-Service -Name Sysmon -ErrorAction SilentlyContinue
+
+if (-not $service) {
+    # Install Sysmon
+    Start-Process -FilePath $SysmonExe `
+        -ArgumentList "-accepteula -i `"$SysmonConfig`"" `
+        -Wait
+}
+else {
+    # Update config if already installed
+    Start-Process -FilePath $SysmonExe `
+        -ArgumentList "-c `"$SysmonConfig`"" `
+        -Wait
+}
+```
 
 
 # User Workstation - WKST-01
