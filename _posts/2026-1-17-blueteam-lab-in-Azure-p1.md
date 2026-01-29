@@ -75,7 +75,7 @@ These are documented [here.](https://learn.microsoft.com/en-us/azure/virtual-net
 For the Splunk server, we'll need to do the following:
 
 - Download and install Splunk Enterprise
-- Configure recieving on port 9997
+- Configure receiving on port 9997
 - Create some indexes
 - Install Splunk Add-on for Microsoft Windows
 
@@ -106,11 +106,11 @@ Documentation for first-time setup, in case you run into trouble: https://help.s
 
 ## Barebones Configuration
 
-Once Splunk is runnning, we should be able to access it via web browser on port 8000 at `http://<splunk-IP>:8000`. You should see a login page.
+Once Splunk is running, we should be able to access it via web browser on port 8000 at `http://<splunk-IP>:8000`. You should see a login page.
 
 ![](/img/blueteamlab/partone/Pasted image 20260119215706.png)
 
-Log in with the admin credentials you created during the installation. Once you are in, you need to configure a reciever port to receive forwarded logs. By default, this is TCP port 9997.
+Log in with the admin credentials you created during the installation. Once you are in, you need to configure a receiver port to receive forwarded logs. By default, this is TCP port 9997.
 
 To do this, go to Settings → Forwarding and Receiving → Configure Receiving → Add New Port: 9997. 
 
@@ -152,7 +152,6 @@ For the DC, we'll need to do the following:
 - Enable Advanced Auditing via group policy
 - Install and configure Sysmon, deploy via group policy
 - Install and configure Spunk Universal Forwarder
-- Create some test users and groups
 
 ## Domain Creation
 
@@ -160,7 +159,7 @@ I'm starting from the assumption that you have an RDP connection to the server a
 
 ```
 Install-WindowsFeature AD-Domain-Services -IncludeManagementTools
-Install-ADDSForest -DomainName soclab.local
+Install-ADDSForest -DomainName btlab.local
 ```
 
 I called this domain `btlab.local`.
@@ -171,11 +170,13 @@ The default Windows auditing policy is limited to 9 categories:
 
 ![](/img/blueteamlab/partone/Pasted image 20260125153714.png)
 
-Advanced Auditing explands on this and is going to vastly improve the usefulness of logs that we can feed into Splunk. It lets us pick specific subcategories of events to log. For example, under the default policy, logon events would all get lumped under "Logon Events", but Advanced Auditing allows us to seperate them out into interactive logons, kerberos auth, etc. 
+Advanced Auditing expands on this and is going to vastly improve the usefulness of logs that we can feed into Splunk. It lets us pick specific subcategories of events to log. For example, under the default policy, logon events would all get lumped under "Logon Events", but Advanced Auditing allows us to seperate them out into interactive logons, kerberos auth, etc. 
 
 Dialing in the Advanced Auditing settings correctly is going to improve the signal to noise ratio of the events we injest.
 
 We're going to set this up through Group Policy and apply it to the DC and any other workstations we add to `btlab.local`. I set up an OU for Workstations and made another version of the policy to apply to them, as we may want to prioritize different events for each.
+
+![](/img/blueteamlab/partone/Pasted image 20260112224517.png)
 
 To create the policy, open Group Policy Management Editor, create the policy, link it to either the Domain Controllers or Workstations OU, and Edit it. The Audit Policy settings are under Computer Configuration -> Windows Settings -> Security Settings -> Advanced Audit Policy Configuration -> Audit Policies.
 
@@ -237,6 +238,54 @@ else {
 }
 ```
 
+I'll just install it manually on the DC.
+
+![](/img/blueteamlab/partone/Pasted image 20260112224418.png)
+
+Sysmon is now installed. Sysmon events can be seen in Event Viewer under `Applications and Services Logs -> Microsoft -> Windows -> Sysmon -> Operational`.
+
+![](/img/blueteamlab/partone/Pasted image 20260128222721.png)
+
+## Splunk Forwarder
+
+Next, we'll need to install and configure Splunk Universal Forwarder. This is the piece that forwards our logs to the Splunk server. There are also other log forwarders that can be used, like WEF for Windows or NxLog for Linux.
+
+Download SUF from the Splunk site: https://www.splunk.com/en_us/download/universal-forwarder.html
+
+I'll deploy this manually; this can also be done through a Splunk Deployment server, group policy, or other third-party tools. 
+
+You will need to specify the IP and receiving port of the Splunk server set up earlier.
+
+![](img/blueteamlab/partone/Pasted image 20260114215912.png)
+
+![](/img/blueteamlab/partone/Pasted image 20260114220455.png)
+
+We also need to create an `inputs.conf` file, which determines which events get forwarded to Splunk. The following will forward Security, System, Application, and Sysmon logs.
+
+```
+[WinEventLog://Security]
+index = wineventlog
+disabled = false
+
+[WinEventLog://System]
+index = wineventlog
+disabled = false
+
+[WinEventLog://Application]
+index = wineventlog
+disabled = false
+
+[WinEventLog://Microsoft-Windows-Sysmon/Operational]
+index = sysmon
+disabled = false
+
+```
+
+Copy this file to `C:\Program Files\SplunkUniversalForwarder\etc\system\local` and restart the Splunk service.
+
+Logging into Splunk, you should start seeing events come in from the DC.
+
+![](/img/blueteamlab/partone/Pasted image 20260128225446.png)
 
 # User Workstation - WKST-01
 
@@ -245,6 +294,18 @@ For the user workstation, we'll need to do the following:
 - Join it to our domain
 - Verify that our group policies work
 - Install Splunk Universal Forwarder
+
+Follow standard steps to join a computer to an AD domain to join WKST-01 to `btlab.local`. Nothing out of the ordinary here. Make sure that DNS is pointed to DC01.
+
+To apply the group policies for Advanced Audit Logging and Sysmon we created earlier, you can either reboot or run `gpupdate /force`. 
+
+Test that sysmon is installed on the machine (check installed programs or event viewer) and that advanced audit logging is enabled (auditpol).
+
+Since I didn't automate installing SUF, we'll need to install that manually using the same steps as DC01. Make sure to create `inputs.conf` and restart the Splunk service.
+
+Check Splunk to make sure logs are getting there:
+
+![](/img/blueteamlab/partone/Pasted image 20260128230415.png)
 
 # Attacker Simulation - Pentest
 
