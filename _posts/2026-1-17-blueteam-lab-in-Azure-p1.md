@@ -256,7 +256,7 @@ I'll deploy this manually; this can also be done through a Splunk Deployment ser
 
 You will need to specify the IP and receiving port of the Splunk server set up earlier.
 
-![](img/blueteamlab/partone/Pasted image 20260114215912.png)
+![](/img/blueteamlab/partone/Pasted image 20260114215912.png)
 
 ![](/img/blueteamlab/partone/Pasted image 20260114220455.png)
 
@@ -309,7 +309,68 @@ Check Splunk to make sure logs are getting there:
 
 # Attacker Simulation - Pentest
 
-For the attack simulation machine, we'll need to do the following:
+On the attack simulation machine, for now we'll just verify that we can reach our targets.
 
-- Ensure we can reach targets
-- Test that attack activity reaches Splunk
+I'll use nmap to recon the network a bit. I'll use a SYN scan. This is going to scan ports without creating a full TCP session. I want to compare how this will show up in our logs vs. other types of nmap scans.
+
+```
+hacker@Pentest:~$ sudo nmap -sS 10.0.0.0/24
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2026-01-19 01:26 UTC
+Nmap scan report for _gateway (10.0.0.1)
+Host is up (0.00037s latency).
+All 1000 scanned ports on _gateway (10.0.0.1) are in ignored states.
+Not shown: 1000 filtered tcp ports (no-response)
+MAC Address: 12:34:56:78:9A:BC (Unknown)
+
+Nmap scan report for dc01.internal.cloudapp.net (10.0.0.4)
+Host is up (0.0010s latency).
+Not shown: 987 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+22/tcp   open  ssh
+53/tcp   open  domain
+88/tcp   open  kerberos-sec
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+389/tcp  open  ldap
+445/tcp  open  microsoft-ds
+464/tcp  open  kpasswd5
+593/tcp  open  http-rpc-epmap
+636/tcp  open  ldapssl
+3268/tcp open  globalcatLDAP
+3269/tcp open  globalcatLDAPssl
+3389/tcp open  ms-wbt-server
+MAC Address: 12:34:56:78:9A:BC (Unknown)
+
+Nmap scan report for wkst-01.internal.cloudapp.net (10.0.0.5)
+Host is up (0.00089s latency).
+Not shown: 998 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+3389/tcp open  ms-wbt-server
+5357/tcp open  wsdapi
+MAC Address: 12:34:56:78:9A:BC (Unknown)
+
+Nmap scan report for splunk.internal.cloudapp.net (10.0.0.6)
+Host is up (0.0013s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT     STATE SERVICE
+22/tcp   open  ssh
+8000/tcp open  http-alt
+8089/tcp open  unknown
+MAC Address: 12:34:56:78:9A:BC (Unknown)
+
+Nmap scan report for pentest.internal.cloudapp.net (10.0.0.7)
+Host is up (0.0000030s latency).
+Not shown: 999 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+
+Nmap done: 256 IP addresses (5 hosts up) scanned in 10.02 seconds`
+```
+
+Success! Scanning the VNet shows us both of our targets and the Splunk server (plus ourselves...). 
+
+If nmap was not able to resolve hostnames, we would still be able to fingerprint each server based on the open ports and running services. `10.0.0.4` is likely a DC because it is running Kerberos on port 88 and DNS on port 53, among other common DC services like ldap and netbios. `10.0.0.5` showing port 3389 for RDP and 5357 for WSDAPI indicates that it is probably a Windows workstation. `10.0.0.6` is a web server running something at port 8000, and `curl`ing it would show us the Splunk login and confirm it is a Splunk server.
+
+# Next Steps
+
+This concludes the lab setup. We have the foundation to start experimenting with attack paths and custom detections, which is what I will be doing in the next post in this series.
