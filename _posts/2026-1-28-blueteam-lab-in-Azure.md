@@ -1,8 +1,8 @@
 ---
 layout: single
 classes: wide
-title:  "BlueTeam Lab - Part One: The Build"
-date:   2026-01-17 20:26:59 -0500
+title:  "BlueTeam Lab Build - Azure"
+date:   2026-01-28 20:26:59 -0500
 categories: homelab blueteam
 ---
 
@@ -373,4 +373,4 @@ If nmap was not able to resolve hostnames, we would still be able to fingerprint
 
 # Next Steps
 
-This concludes the lab setup. We have the foundation to start experimenting with attack paths and custom detections, which is what I will be doing in the next post in this series.
+This concludes the lab setup. We have the foundation to start experimenting with attack paths and custom detections, which is what I will be doing in the next post in this series. Stay tuned!
