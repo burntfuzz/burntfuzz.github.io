@@ -106,7 +106,7 @@ analytics:
 author:
   name             : "burntfuzz"
   avatar           : /img/skelly.jpg
-  bio              : "CTF, Vuln Hunting, and Homelab."
+  bio              : ""
   location         : "US East Coast"
   email            :
   links:
@@ -123,7 +123,7 @@ author:
       icon: "fab fa-fw fa-facebook-square"
       # url: "https://facebook.com/"
     - label: "GitHub"
-      icon: "fab fa-fw fa-github"
+      icon: "/img/skelly.jpg"
       url: "https://github.com/burntfuzz"
     - label: "Instagram"
       icon: "fab fa-fw fa-instagram"

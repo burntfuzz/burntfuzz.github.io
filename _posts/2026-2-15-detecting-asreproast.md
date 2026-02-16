@@ -164,7 +164,7 @@ We can use `evil-winrm` in order to get a shell and achieve a foothold.
 
 If an attacker attempts to bruteforce usernames using a tool like `kerbrute`, a number of 4768 events will be generated. When Kerberos is sent a TGT request with no preauthentication for an invalid username, it generates a 4768 event with a `0x6` Result Code, so we can look for a large number of those within a short timespan from one source IP to detect kerberos username enumeration.
 
-```spl
+```
 index=wineventlog EventCode=4768 Result_Code=0x6
 | bucket span=1m _time 
 | stats count AS kerberos_requests by src_ip, _time
@@ -173,7 +173,7 @@ index=wineventlog EventCode=4768 Result_Code=0x6
 
 If we find something, we can also use the following query to list the unique accounts that were attempted.
 
-```spl
+```
 index=wineventlog EventCode=4768 Result_Code=0x6 Account_Name!="*$" 
 | bucket span=1m _time  
 | stats  dc(Account_Name) AS unique_accounts values(Account_Name) as tried_accounts values(dest) as dest by _time, src_ip
@@ -187,7 +187,7 @@ Notice how we only logged 8 events for the 12 accounts that were bruteforced. Th
 
 Detecting ASReproasting is tricky since the attack abuses legitimate Kerberos behavior. There are no authentication failures or error conditions at play from the DC's perspective. However, we can detect events that specify that no pre-authentication was used as a baseline. This will show all 4768 events originating from ASReproastable accounts. We can also filter on use of RC4 encryption.
 
-```spl
+```
 index=wineventlog EventCode=4768 Pre_Authentication_Type=0 Ticket_Encryption_Type=0x17
 ```
 
@@ -257,8 +257,12 @@ index=wineventlog EventCode=4104 (Message="*Get-ADUser*" AND Message="*4194304*"
 
 This will catch multiple search methods including the standard Get-ADUser filter or LDAP filters, like the following commands:
 
-`Get-ADuser -Filter 'userAccountControl -band 4194304' | -Properties Name, userAccountControl`
-`Get-ADUser -LDAPFilter '(&(objectCategory=user)(userAccountControl:1.2.840.113556.1.4.803:=4194304))' -Properties Name, userAccountControl`
+```
+Get-ADuser -Filter 'userAccountControl -band 4194304' | -Properties Name, userAccountControl
+```
+```
+Get-ADUser -LDAPFilter '(&(objectCategory=user)(userAccountControl:1.2.840.113556.1.4.803:=4194304))' -Properties Name, userAccountControl
+```
 
 ![](/img/blueteamlab/parttwo/Pasted image 20260214162229.png)
 
@@ -269,13 +273,15 @@ The first time we're likely to be made aware of an attack is if we're alerted on
 
 However, this SPL would have caught the ASReproasting attempt:
 
-```spl
+```
 index=wineventlog EventCode=4768 Pre_Authentication_Type=0 Ticket_Encryption_Type=0x17
 ```
 
 Let's investigate further:
 
-`index=wineventlog EventCode=4768 Pre_Authentication_Type=0 Ticket_Encryption_Type=0x17 | stats dc(Account_Name) AS unique_accounts values(Account_Name) as tried_accounts values(dest) as dest by _time, src_ip`
+```
+index=wineventlog EventCode=4768 Pre_Authentication_Type=0 Ticket_Encryption_Type=0x17 | stats dc(Account_Name) AS unique_accounts values(Account_Name) as tried_accounts values(dest) as dest by _time, src_ip
+```
 
 ![](/img/blueteamlab/parttwo/Pasted image 20260214221441.png)
 
