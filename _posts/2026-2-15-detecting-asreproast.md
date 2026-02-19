@@ -323,9 +323,11 @@ Immediate containment steps:
 
 # MITRE ATT&CK Mapping
 
+- [T1021.006](https://attack.mitre.org/techniques/T1021/006/) - Gather Victim Identity Information: Email Addresses
 - [T1046](https://attack.mitre.org/techniques/T1046/) - Network Service Discovery
 - [T1087.002](https://attack.mitre.org/techniques/T1087/002/) - Account Discovery: Domain Accounts
 - [T1558.004](https://attack.mitre.org/techniques/T1558/004/) - Steal or Forge Kerberos Tickets: AS-REP Roasting
+- [T1021.006](https://attack.mitre.org/techniques/T1021/006/) - Remote Services: Windows Remote Management
 
 # Wrapping Up
 
