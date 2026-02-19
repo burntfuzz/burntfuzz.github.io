@@ -321,6 +321,12 @@ Immediate containment steps:
 - Change passwords for `jdenton` and `lwang` accounts, and disable them if not in use.
 - Deny connections to and from `10.0.0.7` via network firewall
 
+# MITRE ATT&CK Mapping
+
+- [T1046](https://attack.mitre.org/techniques/T1046/) - Network Service Discovery
+- [T1087.002](https://attack.mitre.org/techniques/T1087/002/) - Account Discovery: Domain Accounts
+- [T1558.004](https://attack.mitre.org/techniques/T1558/004/) - Steal or Forge Kerberos Tickets: AS-REP Roasting
+
 # Wrapping Up
 
 Okay, role-playing over. If you're still reading this, then hopefully you have a better understanding of how ASReproasting attacks work and how they look from both sides of the aisle. 
